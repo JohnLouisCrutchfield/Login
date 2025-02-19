@@ -1,93 +1,61 @@
+// document.addEventListener("DOMContentLoaded", function () {
+    console.log("auth.js loaded"); // Debugging log
 
-const locationPath = window.location.pathname // returns the pathname of the currentpage
-let accessToken = localStorage.getItem('accessToken');
+    // Handle Signup
+    const signupForm = document.getElementById("signup-form");
+    if (signupForm) {
+        signupForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            // aler(4955)
 
-if(accessToken) {
-    localStorage.removeItem('accessToken')
-    accessToken = null
-}
+            const username = document.getElementById("username").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
 
-if(locationPath === '/login'){
-const login = document.getElementById('login')
-login.addEventListener('submit', (event) => {
-    event.preventDefault(); //stops default event from happening, i.e clicking the submit button
-    const username = event.target.username.value;
-    const password = event.target.password.value;
+            try {
+                const response = await fetch("http://localhost:8080/signup", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, email, password }),
+                });
+                console.log("token" ,response);
 
 
+                if (!response.ok) throw new Error("Signup failed!");
 
-fetch('http://localhost:8080/login', {
-    method: 'POST',
-    headers: {
-        'Content-Type' : 'application/json'
-},
-body: JSON.stringify({
-    username,
-    password,
-    email
-    })
-})
-
-.then(response => {
-    if(response.status !== 200) {
-        throw new Error("Invalid credentials")
+                alert("Signup successful! Redirecting to login...");
+                window.location.href = "login.html";
+            } catch (error) {
+                alert(error.message);
+            }
+        });
     }
-    return response.json()
-})
 
-.then(({accessToken}) => {
-    localStorage.setItem('accessToken', accessToken);
-    res.render('index')
-})
-.catch(error => {
-    alert(error);
-})
-});
+    // Handle Login
+    const loginForm = document.getElementById("login-form");
+    if (loginForm) {
+        loginForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
 
-}
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
 
-//sign up
+            try {
+                const response = await fetch("http://localhost:8080/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password }),
+                });
 
-if(locationPath === 'signup'){
-    
-const signupForm = document.getElementById('signup');
-signupForm.addEventListener('submit', (event) => {
-event.preventDefault();
-const username = event.target.username.value;
-const password = event.target.password.value;
-const email = event.target.email.value;
+                alert("Login successful! Redirecting to login...");
+                if (!response.ok) throw new Error("Invalid username or password");
 
-fetch('http://localhost:8080/signup', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-
-},
-body: JSON.stringify({
-    username,
-    email,
-    password
-})
-})
-
-.then(response => {
-    if(response.status !== 200) {
-        throw new Error("Error while registering the user")
+              
+                alert("Login successful! Redirecting to welcome page...");
+                window.location.href = "welcome.html";
+            } catch (error) {
+                alert(error.message);
+            }
+        });
     }
-    return response.json()
-})
-.then(({accessToken}) => {
-    localStorage.setItem('accessToken', accessToken);
-    window.location.href = '/';
-})
-.catch(error => {
-    alert(error);
-
-
-
-
-} )
-});
-}
-
-
+// });

@@ -1,76 +1,61 @@
-//dbservice
-const dotenv = require('dotenv');
-const mysql = require('mysql2');
+const dotenv = require("dotenv");
+const mysql = require("mysql2");
+
 dotenv.config();
 let instance = null;
 
 const pool = mysql.createPool({
-    host: process.env.HOST,
-    user: process.env.USER,
-    password: process.env.PASSWORD,
-    database: process.env.DATABASE,
-    port: process.env.DB_PORT
-
-
+    host: process.env.HOST || 'localhost',
+    user:  'root',
+    password: process.env.PASSWORD || 'Fayolove2',
+    database: process.env.DATABASE || 'yourdatabase',
+    port: process.env.DB_PORT || '3306',
 });
 
-
 class DbService {
-    static getDbServiceInstance(){
+    static getDbServiceInstance() {
         return instance ? instance : new DbService();
     }
 
- 
-
-async createUser(username, email, password) {
-    try {
-   const insert_ID = await new Promise ((resolve, reject) =>
-    {
-        pool.execute('INSERT INTO users (user, email, password) VALUES (?,?,?);', [username, email, password], (err, result) =>{
-            if (err) reject (new Error(err.message));
-            resolve(result.insert_ID);
-         
-} )
-});
- return {
-    username : username,
-    email: email,
-    password: password,
-    id: insert_ID
-
-
-  };
+    async createUser(username, email, password) {
+        try {
+            return new Promise((resolve, reject) => {
+                pool.execute(
+                    "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+                    [username, email, password],
+                    (err, result) => {
+                        if (err) {
+                            console.error("Database Error (Create User):", err);
+                            return reject(new Error("Database Error: Could not insert user."));
+                        }
+                        resolve({ username, email, id: result.insertId });
+                    }
+                );
+            });
+        } catch (error) {
+            console.error("Unexpected Error in createUser:", error);
+        }
     }
 
-catch {
-
-        console.log(error);
+    async getUserByCredentials(username) {
+        try {
+            return new Promise((resolve, reject) => {
+                pool.execute(
+                    "SELECT id, username, password FROM users WHERE username = ?",
+                    [username],
+                    (err, results) => {
+                        if (err) {
+                            console.error("Database Error (Get User):", err);
+                            return reject(new Error("Database Error: Could not fetch user."));
+                        }
+                        resolve(results.length ? results[0] : null);
+                    }
+                );
+            });
+        } catch (error) {
+            console.error("Unexpected Error in getUserByCredentials:", error);
+        }
     }
 }
 
-async getUserByCredentials (username, password) {
-
-    try {
-        await new Promise ((resolve, reject) =>{
-            pool.execute('SELECT from users (username, password) VALUES (?,?)', [username, password], (err, results)=> {
-                if (err) reject (new Error(err.message));
-                if(result.length === 0){
-                    return res.status(401).send('Invalid username or password');
-                }
-                resolve(results);
-            })
-        
-        } )
-        return {
-            username : username,
-            password: password
-        
-    }
-}
-    catch {
-        console.log(error);
-    }
-
-}
-}
 module.exports = DbService;
